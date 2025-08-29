@@ -23,9 +23,16 @@ output_details = interpreter.get_output_details()
 
 # Clases o categorias
 class_names = [
-    "apple", "banana", "avocado", "cherry", "kiwi", 
-    "mango", "orange", "pineapple", "strawberries", "watermelon"
-]
+"Apple",
+"Orange",
+"Avocado",
+"Kiwi",
+"Mango",
+"Pinenapple",
+"Strawberries",
+"Banana",
+"Cherry",
+"Watermelon"]
 
 # Función de predicción
 def predict(img: Image.Image):
