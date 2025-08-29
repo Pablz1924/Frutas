@@ -5,7 +5,7 @@ from PIL import Image
 import os
 import gdown
 
-# --- Descargar modelo desde Google Drive si no existe ---
+# Descargar modelo desde Drive
 MODEL_PATH = "fruit_cnn.tflite"
 FILE_ID = "1Gq4U0ubtJaHrfdhfOpQJ3s-4In8PRMhi"
 URL = f"https://drive.google.com/uc?id={FILE_ID}"
@@ -14,20 +14,20 @@ if not os.path.exists(MODEL_PATH):
     st.write("📥 Descargando modelo desde Google Drive...")
     gdown.download(URL, MODEL_PATH, quiet=False)
 
-# --- Cargar modelo TFLite ---
+# Cargar modelo 
 interpreter = tf.lite.Interpreter(model_path=MODEL_PATH)
 interpreter.allocate_tensors()
 
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 
-# --- Clases (ajusta con tus categorías reales) ---
+# Clases o categorias
 class_names = [
-    "apple", "banana", "cherry", "date", "grape", 
-    "kiwi", "lemon", "mango", "orange", "watermelon"
+    "apple", "banana", "avocado", "cherry", "kiwi", 
+    "mango", "orange", "pineapple", "strawberries", "watermelon"
 ]
 
-# --- Función de predicción ---
+# Función de predicción
 def predict(img: Image.Image):
     img = img.resize((180,180))  # mismo tamaño que usaste para entrenar
     img_array = np.array(img, dtype=np.float32) / 255.0
@@ -38,8 +38,8 @@ def predict(img: Image.Image):
     preds = interpreter.get_tensor(output_details[0]['index'])[0]
     return preds
 
-# --- Interfaz Streamlit ---
-st.title("🍉 Clasificador de Frutas con CNN (TFLite)")
+# Interfaz Streamlit 
+st.title("Clasificador de Frutas con CNN (TFLite)")
 st.write("Sube una imagen y el modelo intentará adivinar qué fruta es.")
 
 uploaded_file = st.file_uploader("📷 Sube una imagen de fruta", type=["jpg","jpeg","png"])
