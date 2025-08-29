@@ -1,45 +1,56 @@
 import streamlit as st
 import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
 import numpy as np
 from PIL import Image
+import os
+import gdown
 
-# --- Cargar modelo ---
-@st.cache_resource
-def load_cnn():
-    model = load_model("fruit_cnn.h5")
-    return model
+# --- Descargar modelo desde Google Drive si no existe ---
+MODEL_PATH = "fruit_cnn.tflite"
+FILE_ID = "1Gq4U0ubtJaHrfdhfOpQJ3s-4In8PRMhi"
+URL = f"https://drive.google.com/uc?id={FILE_ID}"
 
-model = load_cnn()
+if not os.path.exists(MODEL_PATH):
+    st.write("📥 Descargando modelo desde Google Drive...")
+    gdown.download(URL, MODEL_PATH, quiet=False)
 
-# --- Definir categorías ---
-# OJO: usa la misma lista que tenías en `data_cat` al entrenar
+# --- Cargar modelo TFLite ---
+interpreter = tf.lite.Interpreter(model_path=MODEL_PATH)
+interpreter.allocate_tensors()
+
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+# --- Clases (ajusta con tus categorías reales) ---
 class_names = [
     "apple", "banana", "cherry", "date", "grape", 
     "kiwi", "lemon", "mango", "orange", "watermelon"
 ]
 
-# --- Interfaz Streamlit ---
-st.title("🍉 Clasificador de Frutas con CNN")
-st.write("Sube una imagen y el modelo intentará adivinar la fruta.")
+# --- Función de predicción ---
+def predict(img: Image.Image):
+    img = img.resize((180,180))  # mismo tamaño que usaste para entrenar
+    img_array = np.array(img, dtype=np.float32) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
 
-# Subir imagen
-uploaded_file = st.file_uploader("Sube una imagen de fruta", type=["jpg","jpeg","png"])
+    interpreter.set_tensor(input_details[0]['index'], img_array)
+    interpreter.invoke()
+    preds = interpreter.get_tensor(output_details[0]['index'])[0]
+    return preds
+
+# --- Interfaz Streamlit ---
+st.title("🍉 Clasificador de Frutas con CNN (TFLite)")
+st.write("Sube una imagen y el modelo intentará adivinar qué fruta es.")
+
+uploaded_file = st.file_uploader("📷 Sube una imagen de fruta", type=["jpg","jpeg","png"])
 
 if uploaded_file is not None:
     img = Image.open(uploaded_file).convert("RGB")
     st.image(img, caption="Imagen subida", use_container_width=True)
 
-    # Preprocesamiento (mismo tamaño que usaste para entrenar)
-    img_resized = img.resize((180,180))  
-    img_array = image.img_to_array(img_resized)
-    img_array = np.expand_dims(img_array, axis=0) / 255.0
+    preds = predict(img)
+    score = tf.nn.softmax(preds)
 
-    # Predicción
-    preds = model.predict(img_array)
-    score = tf.nn.softmax(preds[0])
-    
     st.write("### 🔮 Predicción:")
     st.write(f"Fruta: **{class_names[np.argmax(score)]}**")
     st.write(f"Confianza: **{100*np.max(score):.2f}%**")
