@@ -42,7 +42,7 @@ def predict(img: Image.Image):
 st.title("Clasificador de Frutas con CNN (TFLite)")
 st.write("Sube una imagen")
 
-uploaded_file = st.file_uploader("📷 Sube una imagen de fruta", type=["jpg","jpeg","png"])
+uploaded_file = st.file_uploader("Sube una imagen de fruta", type=["jpg","jpeg","png"])
 
 if uploaded_file is not None:
     img = Image.open(uploaded_file).convert("RGB")
